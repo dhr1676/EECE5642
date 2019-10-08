@@ -7,11 +7,11 @@ from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.decomposition import LatentDirichletAllocation
 import pyLDAvis.sklearn
 from nltk.stem.wordnet import WordNetLemmatizer
-
 from pprint import pprint
-
 import re
 import string
+
+from MidtermProject.stopwords import load_stopwords
 
 
 def pre_processing(text):
@@ -38,6 +38,7 @@ def main():
     print(type(train_data), type(train_data[0]), "\n")  # <class 'list'> <class 'str'>
 
     processed_data = [pre_processing(data) for data in train_data]
+    stopwords = load_stopwords()
 
     # for i in range(5):
     #     print(processed_data[i])
@@ -45,18 +46,20 @@ def main():
     # print("\n\n\n\n\n")
 
     # #### Learn Bag-of-words (BoW)
-    count_vec = CountVectorizer(stop_words='english')
+    count_vec = CountVectorizer(stop_words=stopwords)
     count_vec.fit(processed_data)
     data_bow = count_vec.transform(processed_data)
     feature_names_bow = count_vec.get_feature_names()
     print(len(processed_data), data_bow.shape, type(data_bow))
+    print(processed_data[0])
+    print(data_bow[0])
 
-    # #### Learn TF-IDF model
-    tfidf_vec = TfidfVectorizer(stop_words='english')
-    tfidf_vec.fit(processed_data)
-    data_tfidf = tfidf_vec.transform(processed_data)
-    feature_names_tfidf = tfidf_vec.get_feature_names()
-    print(len(processed_data), data_tfidf.shape, type(data_tfidf))
+    # # #### Learn TF-IDF model
+    # tfidf_vec = TfidfVectorizer(stop_words='english')
+    # tfidf_vec.fit(processed_data)
+    # data_tfidf = tfidf_vec.transform(processed_data)
+    # feature_names_tfidf = tfidf_vec.get_feature_names()
+    # print(len(processed_data), data_tfidf.shape, type(data_tfidf))
 
 
 if __name__ == '__main__':
