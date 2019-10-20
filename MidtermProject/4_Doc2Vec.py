@@ -4,30 +4,10 @@
 
 from sklearn.datasets import fetch_20newsgroups
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
-from sklearn.decomposition import LatentDirichletAllocation
-import pyLDAvis.sklearn
-from nltk.stem.wordnet import WordNetLemmatizer
-
+from gensim.models import Doc2Vec
 from pprint import pprint
-
-import re
-import string
-
-
-def pre_processing(text):
-    # #### Remove punctuations 去除标点
-    text = re.sub(r'[{}]+'.format(string.punctuation), ' ', text)
-    text = text.strip().lower()
-
-    # #### Remove numbers 去除数字
-    remove_digits = str.maketrans('', '', string.digits)
-    text = text.translate(remove_digits)
-
-    # #### Lemmatize 把英语词汇归元化/标准化
-    lemma = WordNetLemmatizer()
-    normalized = " ".join([lemma.lemmatize(word) for word in text.split()])
-
-    return normalized
+from MidtermProject.tools import load_stopwords, pre_processing
+import gensim
 
 
 def display_topics(model, feature_names, no_top_words):
@@ -51,61 +31,15 @@ def main():
     #     print("\n\n")
     # print("\n\n\n\n\n")
 
-    # #### Learn Bag-of-words (BoW)
-    count_vec = CountVectorizer(stop_words='english')
-    count_vec.fit(processed_data)
-    data_bow = count_vec.transform(processed_data)
-    feature_names_bow = count_vec.get_feature_names()
-    print(len(processed_data), data_bow.shape, type(data_bow))
+    max_epochs = 500
+    vec_size = 20
+    alpha = 0.025
 
-    # #### Learn TF-IDF model
-    tfidf_vec = TfidfVectorizer(stop_words='english')
-    tfidf_vec.fit(processed_data)
-    data_tfidf = tfidf_vec.transform(processed_data)
-    feature_names_tfidf = tfidf_vec.get_feature_names()
-    print(len(processed_data), data_tfidf.shape, type(data_tfidf))
+    model = gensim.models.Doc2Vec(processed_data, dm=0, alpha=0.1, size=20, min_alpha=0.025)
 
-    # pprint(count_vec.get_feature_names())
-    # pprint(count_vec.vocabulary_)
-
-    # #### Train LDA models for BoW
-    num_topics = 20
-    lda_bow = LatentDirichletAllocation(n_components=num_topics, max_iter=5, learning_method='online',
-                                        learning_offset=50.,
-                                        random_state=0)
-    lda_bow.fit(data_bow)
-    display_topics(lda_bow, feature_names_bow, num_topics)
-
-    print('\n\n\n')
-
-    # #### Train LDA models for TF-IDF
-    num_topics = 20
-    lda_tfidf = LatentDirichletAllocation(n_components=num_topics, max_iter=5, learning_method='online',
-                                          learning_offset=50.,
-                                          random_state=0)
-    lda_tfidf.fit(data_tfidf)
-    display_topics(lda_tfidf, feature_names_tfidf, num_topics)
-
-    print('Start Kmeans:')
-    from sklearn.cluster import KMeans
-    weight = data_tfidf.toarray()
-
-    clf = KMeans(n_clusters=20)
-    s = clf.fit(weight)
-    print(s)
-
-    # 20个中心点
-    print(clf.cluster_centers_)
-
-    # 每个样本所属的簇
-    print(clf.labels_)
-    i = 1
-    while i <= len(clf.labels_):
-        print(i, clf.labels_[i - 1])
-        i = i + 1
-
-        # 用来评估簇的个数是否合适，距离越小说明簇分的越好，选取临界点的簇个数
-    print(clf.inertia_)
+    # d2v_model = Doc2Vec(vector_size=vec_size, min_count=1, dm=1, alpha=alpha, min_alpha=0.00025)
+    #
+    # d2v_model.build_vocab(processed_data)
 
 
 if __name__ == '__main__':

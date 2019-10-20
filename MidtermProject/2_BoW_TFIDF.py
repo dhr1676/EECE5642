@@ -20,19 +20,21 @@ def pre_processing(text):
     text = text.strip().lower()
 
     # #### Remove numbers 去除数字
-    remove_digits = str.maketrans('', '', string.digits)
-    text = text.translate(remove_digits)
+    # remove_digits = str.maketrans('', '', string.digits)
+    # text = text.translate(remove_digits)
+    text = re.sub(r'[{}]+'.format(string.digits), ' ', text)
 
-    # #### Lemmatize 把英语词汇归元化/标准化
-    lemma = WordNetLemmatizer()
-    normalized = " ".join([lemma.lemmatize(word) for word in text.split()])
+    # # #### Lemmatize 把英语词汇归元化/标准化
+    # lemma = WordNetLemmatizer()
+    # normalized = " ".join([lemma.lemmatize(word) for word in text.split()])
 
-    return normalized
+    return text
 
 
 def main():
     target_names = ['alt.atheism']
-    news_train = fetch_20newsgroups(subset='train', categories=target_names)
+    # news_train = fetch_20newsgroups(subset='train', categories=target_names)
+    news_train = fetch_20newsgroups(subset='train')
     train_data = news_train.data
     print(len(train_data))
     print(type(train_data), type(train_data[0]), "\n")  # <class 'list'> <class 'str'>
@@ -46,13 +48,13 @@ def main():
     # print("\n\n\n\n\n")
 
     # #### Learn Bag-of-words (BoW)
-    count_vec = CountVectorizer(stop_words=stopwords)
+    count_vec = CountVectorizer(stop_words=stopwords, max_features=40000)
     count_vec.fit(processed_data)
     data_bow = count_vec.transform(processed_data)
     feature_names_bow = count_vec.get_feature_names()
     print(len(processed_data), data_bow.shape, type(data_bow))
-    print(processed_data[0])
-    print(data_bow[0])
+    # print(processed_data[0])
+    # print(data_bow[0])
 
     # # #### Learn TF-IDF model
     # tfidf_vec = TfidfVectorizer(stop_words='english')

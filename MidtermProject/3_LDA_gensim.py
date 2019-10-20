@@ -1,5 +1,9 @@
 # _*_coding:utf-8_*_
 # Author    : Ding
+# Time      : 2019/10/19 21:26
+
+# _*_coding:utf-8_*_
+# Author    : Ding
 # Time      : 2019/10/7 13:37
 
 from sklearn.datasets import fetch_20newsgroups
@@ -8,6 +12,10 @@ from sklearn.decomposition import LatentDirichletAllocation
 import pyLDAvis.sklearn
 from nltk.stem.wordnet import WordNetLemmatizer
 import wordcloud
+
+from gensim import corpora
+from gensim.models.ldamodel import LdaModel
+import gensim
 
 import re
 import string
@@ -22,6 +30,7 @@ FEATURE_NUM = 5000
 
 def pre_processing(text):
     # #### Remove punctuations 去除标点
+    text = text.replace("\'", "")
     text = re.sub(r'[{}]+'.format(string.punctuation), ' ', text)
     text = text.strip().lower()
 
@@ -29,6 +38,10 @@ def pre_processing(text):
     # remove_digits = str.maketrans('', '', string.digits)
     # text = text.translate(remove_digits)
     text = re.sub(r'[{}]+'.format(string.digits), ' ', text)
+
+    stop = load_stopwords()
+    # text = " ".join([i for i in text.split() if i not in stop])
+    text = [i for i in text.split() if i not in stop]
 
     # # #### Lemmatize 把英语词汇归元化/标准化
     # lemma = WordNetLemmatizer()
@@ -70,7 +83,8 @@ def main():
                     'sci.med',
                     'talk.politics.guns'
                     ]
-    news_train = fetch_20newsgroups(subset='train', categories=target_names)
+    remove = ('headers', 'footers', 'quotes')
+    news_train = fetch_20newsgroups(subset='train', categories=target_names, remove=remove)
     train_data = news_train.data
     print(len(train_data))
     print(type(train_data), type(train_data[0]), "\n")  # <class 'list'> <class 'str'>
@@ -78,41 +92,16 @@ def main():
     processed_data = [pre_processing(data) for data in train_data]
     stopwords = load_stopwords()
 
-    # #### Learn Bag-of-words (BoW)
-    # count_vec = CountVectorizer(stop_words='english')
-    count_vec = CountVectorizer(stop_words=stopwords, max_features=FEATURE_NUM)
-    count_vec.fit(processed_data)
-    data_bow = count_vec.transform(processed_data)
-    feature_names_bow = count_vec.get_feature_names()
-    print(len(processed_data), data_bow.shape, type(data_bow))
+    dictionary = corpora.Dictionary(processed_data)
+    doc_term_matrix = [dictionary.doc2bow(doc) for doc in processed_data]
 
-    # #### Learn TF-IDF model
-    # tfidf_vec = TfidfVectorizer(stop_words='english')
-    tfidf_vec = TfidfVectorizer(stop_words=stopwords, max_features=FEATURE_NUM)
-    tfidf_vec.fit(processed_data)
-    data_tfidf = tfidf_vec.transform(processed_data)
-    feature_names_tfidf = tfidf_vec.get_feature_names()
-    print(len(processed_data), data_tfidf.shape, type(data_tfidf))
+    # LdaModel = gensim.models.ldamodel.LdaModel
+    lda_model = LdaModel(doc_term_matrix, num_topics=5, id2word=dictionary, passes=50)
 
-    # #### Train LDA models for BoW
-    num_topics = 5
-    num_topic_word = 20
-    lda_bow = LatentDirichletAllocation(n_components=num_topics, max_iter=5, learning_method='online',
-                                        learning_offset=50.,
-                                        random_state=0)
-    lda_bow.fit(data_bow)
-    display_topics(lda_bow, feature_names_bow, num_topic_word, "BoW_word_cloud")
+    # print(lda_model.print_topics(num_topics=5, num_words=10))
 
-    print('\n\n\n')
-
-    # #### Train LDA models for TF-IDF
-    num_topics = 5
-    num_topic_word = 20
-    lda_tfidf = LatentDirichletAllocation(n_components=num_topics, max_iter=5, learning_method='online',
-                                          learning_offset=50.,
-                                          random_state=0)
-    lda_tfidf.fit(data_tfidf)
-    display_topics(lda_tfidf, feature_names_tfidf, num_topic_word, "TF-IDF_word_cloud")
+    for topic in lda_model.print_topics(num_words=10):
+        print(topic)
 
 
 if __name__ == '__main__':

@@ -22,9 +22,9 @@ def pre_processing(text):
     # text = text.translate(remove_digits)
     text = re.sub(r'[{}]+'.format(string.digits), ' ', text)
 
-    # #### Lemmatize 把英语词汇归元化/标准化
-    lemma = WordNetLemmatizer()
-    text = " ".join([lemma.lemmatize(word) for word in text.split()])
+    # # #### Lemmatize 把英语词汇归元化/标准化
+    # lemma = WordNetLemmatizer()
+    # text = " ".join([lemma.lemmatize(word) for word in text.split()])
 
     return text
 
