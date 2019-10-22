@@ -73,8 +73,8 @@ def main():
     stopwords = load_stopwords()
 
     # #### Learn Bag-of-words (BoW)
-    max_df = 0.8
-    min_df = 0.001
+    max_df = 0.3
+    min_df = 0.00005
     count_vec = CountVectorizer(strip_accents='unicode',
                                 stop_words=stopwords,
                                 max_df=max_df,
@@ -102,6 +102,9 @@ def main():
     k = 20
     all = len(freq_list)
     top_k_list = sorted(top_dict.items(), key=lambda l: l[1], reverse=True)[:k]
+    # m1 = 100
+    # m2 = 130
+    # top_k_list = sorted(top_dict.items(), key=lambda l: l[1], reverse=True)[m1:m2]
 
     print(top_k_list)
 
@@ -114,6 +117,8 @@ def main():
     plt.tick_params(labelsize=8)
     plt.title("Top %d / %d Words of  with max_df = %.2f and min_df = %.3f" % (k, all, max_df, min_df),
               fontsize='large', fontweight='bold')
+    # plt.title("Top %d-%d / %d Words of  with max_df = %.2f and min_df = %.3f" % (m1, m2, all, max_df, min_df),
+    #           fontsize='large', fontweight='bold')
     plt.show()
     plt.close()
 

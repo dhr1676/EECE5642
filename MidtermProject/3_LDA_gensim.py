@@ -14,6 +14,7 @@ from nltk.stem.wordnet import WordNetLemmatizer
 import wordcloud
 
 from gensim import corpora
+from gensim.models import Word2Vec
 from gensim.models.ldamodel import LdaModel
 import gensim
 
@@ -22,32 +23,13 @@ import string
 import time
 from random import randint
 from pprint import pprint
+import pyLDAvis
+import pyLDAvis.gensim
+from matplotlib import pyplot
 
-from MidtermProject.stopwords import load_stopwords
+from MidtermProject.tools import load_stopwords, pre_processing
 
 FEATURE_NUM = 5000
-
-
-def pre_processing(text):
-    # #### Remove punctuations 去除标点
-    text = text.replace("\'", "")
-    text = re.sub(r'[{}]+'.format(string.punctuation), ' ', text)
-    text = text.strip().lower()
-
-    # #### Remove numbers 去除数字
-    # remove_digits = str.maketrans('', '', string.digits)
-    # text = text.translate(remove_digits)
-    text = re.sub(r'[{}]+'.format(string.digits), ' ', text)
-
-    stop = load_stopwords()
-    # text = " ".join([i for i in text.split() if i not in stop])
-    text = [i for i in text.split() if i not in stop]
-
-    # # #### Lemmatize 把英语词汇归元化/标准化
-    # lemma = WordNetLemmatizer()
-    # text = " ".join([lemma.lemmatize(word) for word in text.split()])
-
-    return text
 
 
 def display_topics(model, feature_names, no_top_words, file_name):
@@ -90,18 +72,45 @@ def main():
     print(type(train_data), type(train_data[0]), "\n")  # <class 'list'> <class 'str'>
 
     processed_data = [pre_processing(data) for data in train_data]
-    stopwords = load_stopwords()
 
-    dictionary = corpora.Dictionary(processed_data)
-    doc_term_matrix = [dictionary.doc2bow(doc) for doc in processed_data]
+    # Create Dictionary
+    id2word = corpora.Dictionary(processed_data)
 
-    # LdaModel = gensim.models.ldamodel.LdaModel
-    lda_model = LdaModel(doc_term_matrix, num_topics=5, id2word=dictionary, passes=50)
+    # Create Corpus
+    texts = processed_data
 
-    # print(lda_model.print_topics(num_topics=5, num_words=10))
+    # Term Document Frequency
+    corpus = [id2word.doc2bow(text) for text in texts]
 
-    for topic in lda_model.print_topics(num_words=10):
-        print(topic)
+    lda_model = LdaModel(corpus=corpus,
+                         id2word=id2word,
+                         num_topics=5,
+                         random_state=100,
+                         update_every=1,
+                         chunksize=100,
+                         passes=10,
+                         alpha='auto',
+                         per_word_topics=True)
+
+    pprint(lda_model.print_topics())
+    # Visualize the topics
+    vis = pyLDAvis.gensim.prepare(lda_model, corpus, id2word)
+    pyLDAvis.save_html(vis, 'lda.html')
+
+    # doc_lda = lda_model[corpus]
+
+    # # train model
+    # model = Word2Vec(processed_data[:10], iter=3)
+    # # fit a 2d PCA model to the vectors
+    # X = model[model.wv.vocab]
+    # pca = PCA(n_components=2)
+    # result = pca.fit_transform(X)
+    # # create a scatter plot of the projection
+    # pyplot.scatter(result[:, 0], result[:, 1])
+    # words = list(model.wv.vocab)
+    # for i, word in enumerate(words):
+    #     pyplot.annotate(word, xy=(result[i, 0], result[i, 1]))
+    # pyplot.show()
 
 
 if __name__ == '__main__':
