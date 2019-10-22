@@ -12,6 +12,7 @@ import numpy as np
 from nltk.corpus import stopwords
 from string import punctuation
 
+from pprint import pprint
 
 
 def clean_text(texts, min_length=2):
@@ -70,29 +71,36 @@ data_label_names = dataset.target_names
 
 model_DBOW = train_docvec(0, 0, 4, 30, tagged_data)
 
-# tagged_tr = [TaggedDocument(words=word_tokenize(_d.lower()),
-# tags=[str(i)]) for i, _d in enumerate(train.text)]
+pprint(len(tagged_data))
+pprint(tagged_data[0:4])
+# 获取与tag为0的向量最相似的数据
+sims = model_DBOW.docvecs.most_similar(0)
+pprint(sims)
+# 计算tag 0，2两者之间的距离
+pprint(model_DBOW.docvecs.similarity(0, 2))
+# 获取tag 4的向量
+pprint(model_DBOW.docvecs[4])
 
-X_train = np.array([model_DBOW.docvecs[str(i)] for i in range(len(tagged_data))])
-y_train = list(data_label_names)
-
-print(X_train.shape)
-print(len(y_train))
-
-# 使用T-SNE算法，对权重进行降维，准确度比PCA算法高，但是耗时长
-tsne = TSNE(n_components=2)
-decomposition_data = tsne.fit_transform(X_train)
-x, y = [], []
-for i in decomposition_data:
-    x.append(i[0])
-    y.append(i[1])
-fig = plt.figure(figsize=(10, 10))
-ax = plt.axes()
-plt.scatter(x, y, c=tagged_list, marker="x")
-plt.xticks(())
-plt.yticks(())
-plt.show()
-
+# # #### #############################################################
+# X_train = np.array([model_DBOW.docvecs[str(i)] for i in range(len(tagged_data))])
+# y_train = list(data_label_names)
+#
+# print(X_train.shape)
+# print(len(y_train))
+#
+# # 使用T-SNE算法，对权重进行降维，准确度比PCA算法高，但是耗时长
+# tsne = TSNE(n_components=2)
+# decomposition_data = tsne.fit_transform(X_train)
+# x, y = [], []
+# for i in decomposition_data:
+#     x.append(i[0])
+#     y.append(i[1])
+# fig = plt.figure(figsize=(10, 10))
+# ax = plt.axes()
+# plt.scatter(x, y, c=tagged_list, marker="x")
+# plt.xticks(())
+# plt.yticks(())
+# plt.show()
 
 # model_dbow2 = train_docvec(0, 0, 4, 30, tagged_data)
 # model_dbow3 = train_docvec(0, 1, 4, 30, tagged_data)
